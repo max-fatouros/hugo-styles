@@ -30,8 +30,9 @@ Shared lesson metadata such as `params.lesson.title`, `params.lesson.tagline`, a
 `params.lesson.description` belongs in `hugo.toml`, and `lesson/meta` can reuse those values
 inside Markdown body content when you want homepage copy to stay aligned with the config.
 
-If you want an authors block on the homepage, add a root-level `AUTHORS` file. The `lesson/authors`
-shortcode reads that file directly and renders the contributors there.
+If you want an authors block on the homepage, list the authors in a root-level `CITATION.cff`.
+The `lesson/authors` shortcode renders each author with a link to their `orcid`. Lessons without a
+`CITATION.cff` can use a root-level `AUTHORS` file with one GitHub handle per line instead.
 
 ## Example episode front matter
 
