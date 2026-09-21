@@ -32,7 +32,7 @@ This repository serves two roles:
 ## What it provides
 
 - Episode layouts with automatic rendering of `questions`, `objectives`, `keypoints`, and teaching/exercise time.
-- Custom shortcodes for `challenge`, `solution`, `hint`, `learner`, `instructor`, glossary references, learner profile references, and lesson homepage snippets for overview, schedule, and authors from `CITATION.cff` (or `AUTHORS`).
+- Custom shortcodes for `challenge`, `solution`, `hint`, `learner`, `instructor`, glossary references, learner profile references, and lesson homepage snippets for overview, schedule, and authors from `CITATION.cff`.
 - Hextra-native tabs with synced variants enabled by default.
 - Aggregated lesson pages for:
   - Key Points

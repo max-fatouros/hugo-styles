@@ -45,8 +45,7 @@ Use this order in a fresh lesson repository:
 5. Customize the landing page by editing `content/_index.md` while keeping `layout = "hextra-home"`.
    See [Components]({{< relref "/docs/components" >}}) for the recommended homepage pattern.
    If you want authors rendered on the homepage, list them in `CITATION.cff` in the repository root,
-   with each author's `orcid`. An `AUTHORS` file with one GitHub handle per line also works when
-   there is no `CITATION.cff`.
+   with each author's `orcid` and, optionally, their GitHub handle as `alias`.
 
 ## Deploy on GitHub Pages
 

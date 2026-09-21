@@ -31,8 +31,9 @@ Shared lesson metadata such as `params.lesson.title`, `params.lesson.tagline`, a
 inside Markdown body content when you want homepage copy to stay aligned with the config.
 
 If you want an authors block on the homepage, list the authors in a root-level `CITATION.cff`.
-The `lesson/authors` shortcode renders each author with a link to their `orcid`. Lessons without a
-`CITATION.cff` can use a root-level `AUTHORS` file with one GitHub handle per line instead.
+The `lesson/authors` shortcode renders each author with a link to their `orcid`, and to their
+GitHub profile when `alias` holds their GitHub handle. The ORCID and GitHub columns only appear
+when at least one author has a value for them.
 
 ## Example episode front matter
 
