@@ -264,3 +264,40 @@ Another lead paragraph.
 		}
 	}
 }
+
+func TestValidateEpisodeDocQuestionsAreOptional(t *testing.T) {
+	base := map[string]any{
+		"title":      "Episode",
+		"objectives": []any{"Do a thing."},
+		"keypoints":  []any{"A thing was done."},
+		"weight":     10,
+	}
+	withQuestions := func(value any, present bool) contentDoc {
+		meta := map[string]any{}
+		for key, item := range base {
+			meta[key] = item
+		}
+		if present {
+			meta["questions"] = value
+		}
+		return contentDoc{Path: "content/episodes/01-first/index.md", Section: "episodes", BaseName: "index.md", Meta: meta}
+	}
+
+	for name, testCase := range map[string]struct {
+		doc          contentDoc
+		wantFindings int
+	}{
+		"absent":     {withQuestions(nil, false), 0},
+		"empty":      {withQuestions([]any{}, true), 0},
+		"populated":  {withQuestions([]any{"Why?"}, true), 0},
+		"blank":      {withQuestions([]any{" "}, true), 1},
+		"not a list": {withQuestions("Why?", true), 1},
+	} {
+		t.Run(name, func(t *testing.T) {
+			findings, _, _ := validateEpisodeDoc(testCase.doc)
+			if len(findings) != testCase.wantFindings {
+				t.Fatalf("expected %d findings, got %#v", testCase.wantFindings, findings)
+			}
+		})
+	}
+}

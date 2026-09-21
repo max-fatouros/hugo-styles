@@ -9,12 +9,12 @@ Use episode front matter to describe both the teaching flow and the navigation m
 
 - `title`: a non-empty string shown in navigation and episode headers
 - `weight`: an integer order in the lesson
-- `questions`: a non-empty list of non-empty learner-facing strings
 - `objectives`: a non-empty list of non-empty learning-goal strings
 - `keypoints`: a non-empty list of non-empty recap strings
 
 ## Optional episode fields
 
+- `questions`: a list of non-empty learner-facing strings, omitted for episodes that pose none
 - `teaching`: a non-negative integer teaching time in minutes
 - `exercises`: a non-negative integer exercise time in minutes
 - `summary`: override for episode card summaries

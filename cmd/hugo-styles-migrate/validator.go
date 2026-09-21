@@ -240,13 +240,22 @@ func validateEpisodeDoc(doc contentDoc) ([]finding, int, bool) {
 	if title, ok := doc.Meta["title"].(string); !ok || strings.TrimSpace(title) == "" {
 		findings = append(findings, metadataFinding(doc.Path, "episode title must be a non-empty string"))
 	}
-	for _, key := range []string{"questions", "objectives", "keypoints"} {
+	for _, key := range []string{"objectives", "keypoints"} {
 		if !nonEmptyStringList(doc.Meta[key]) {
 			findings = append(findings, metadataFinding(
 				doc.Path,
 				fmt.Sprintf("episode %s must be a non-empty list of non-empty strings", key),
 			))
 		}
+	}
+	// Questions are optional: Carpentries episodes such as homework or coffee
+	// breaks legitimately have none. Only reject a value that is present and
+	// malformed.
+	if questions, present := doc.Meta["questions"]; present && !emptyOrNonEmptyStringList(questions) {
+		findings = append(findings, metadataFinding(
+			doc.Path,
+			"episode questions must be a list of non-empty strings",
+		))
 	}
 
 	weight, ok := strictIntValue(doc.Meta["weight"])
@@ -274,6 +283,17 @@ func validateEpisodeDoc(doc contentDoc) ([]finding, int, bool) {
 
 func metadataFinding(path, message string) finding {
 	return finding{Path: path, Kind: "metadata", Message: message}
+}
+
+func emptyOrNonEmptyStringList(value any) bool {
+	switch typed := value.(type) {
+	case []string:
+		return len(typed) == 0 || nonEmptyStringList(value)
+	case []any:
+		return len(typed) == 0 || nonEmptyStringList(value)
+	default:
+		return false
+	}
 }
 
 func nonEmptyStringList(value any) bool {
