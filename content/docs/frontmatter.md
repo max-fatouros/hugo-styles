@@ -35,6 +35,27 @@ The `lesson/authors` shortcode renders each author with a link to their `orcid`,
 GitHub profile when `alias` holds their GitHub handle. The ORCID and GitHub columns only appear
 when at least one author has a value for them.
 
+Each person's displayed name joins `given-names`, `name-particle`, `family-names`, and
+`name-suffix` in that order, with spaces, skipping any that are missing. For an organisation or
+group listed as an author, give a single `name` instead. An author with neither is listed under
+their `alias`.
+
+```yaml
+authors:
+  - given-names: Alexander   # shown as "Alexander von Humboldt III"
+    name-particle: von
+    family-names: Humboldt
+    name-suffix: III
+    orcid: https://orcid.org/0000-0002-1825-0097
+  - name: HEP Software Foundation   # shown as "HEP Software Foundation"
+  - alias: octocat                  # shown as "octocat", linked to github.com/octocat
+```
+
+An empty `CITATION.cff` renders no table. Otherwise the build fails unless the file has a
+non-empty `authors` list and every author has a name or `alias`. To check the rest of the
+file against the CFF specification, run a validator such as
+[cffconvert](https://github.com/citation-file-format/cffconvert) (`cffconvert --validate`).
+
 ## Example episode front matter
 
 ```toml

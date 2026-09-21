@@ -8,34 +8,79 @@
 {{ $hasOrcid := false }}
 {{ $hasGithub := false }}
 
-{{ if and $page.IsHome (fileExists "CITATION.cff") }}
-  {{ $parsed := try (transform.Unmarshal (os.ReadFile "CITATION.cff")) }}
+{{/* fileExists and os.ReadFile fall back to module directories, which would
+     pick up hugo-styles' own CITATION.cff; readDir lists only the project. */}}
+{{ $hasCitation := false }}
+{{ if $page.IsHome }}
+  {{ range readDir "." }}
+    {{ if eq .Name "CITATION.cff" }}{{ $hasCitation = true }}{{ end }}
+  {{ end }}
+{{ end }}
+
+{{/* An empty or comment-only CITATION.cff renders no table. Anything else must
+     have the structure the table relies on, or the build fails. Full CFF schema
+     compliance is left to a validator such as cffconvert. */}}
+{{ if $hasCitation }}
+  {{/* Parse as YAML explicitly: format sniffing fails on comment-only files. */}}
+  {{ $parsed := try (resources.FromString "CITATION.cff.yaml" (os.ReadFile "CITATION.cff") | transform.Unmarshal) }}
+  {{ $authors := slice }}
   {{ with $parsed.Err }}
-    {{ warnf "lesson/authors: CITATION.cff could not be parsed: %s" . }}
+    {{ errorf "lesson/authors: CITATION.cff could not be parsed: %s" . }}
   {{ else }}
-    {{ range $parsed.Value.authors }}
-      {{ $given := index . "given-names" | default "" }}
-      {{ $family := index . "family-names" | default "" }}
-      {{ $display := trim (printf "%s %s" $given $family) " " }}
-      {{/* cff also allows entity authors, which carry a single name field. */}}
-      {{ if not $display }}
-        {{ $display = index . "name" | default "" }}
-      {{ end }}
-      {{ $orcid := "" }}
-      {{ with findRESubmatch `(\d{4}-\d{4}-\d{4}-\d{3}[\dXx])` (printf "%v" (index . "orcid" | default "")) 1 }}
-        {{ $orcid = index (index . 0) 0 }}
-      {{ end }}
-      {{ $github := "" }}
-      {{ $alias := trim (printf "%v" (index . "alias" | default "")) " \t" }}
-      {{ with findRESubmatch `^(?:https?://(?:www\.)?github\.com/)?@?([A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?)/?$` $alias 1 }}
-        {{ $github = index (index . 0) 1 }}
-      {{ end }}
-      {{ if $display }}
-        {{ if $orcid }}{{ $hasOrcid = true }}{{ end }}
-        {{ if $github }}{{ $hasGithub = true }}{{ end }}
-        {{ $rows = $rows | append (dict "display" $display "orcid" $orcid "github" $github) }}
+    {{ with $parsed.Value }}
+      {{ if not (reflect.IsMap .) }}
+        {{ errorf "lesson/authors: CITATION.cff must be a mapping of keys to values" }}
+      {{ else }}
+        {{ $list := index . "authors" }}
+        {{ if not (reflect.IsSlice $list) }}
+          {{ errorf "lesson/authors: CITATION.cff must have an authors list" }}
+        {{ else if eq (len $list) 0 }}
+          {{ errorf "lesson/authors: authors in CITATION.cff must not be empty" }}
+        {{ else }}
+          {{ $authors = $list }}
+        {{ end }}
       {{ end }}
     {{ end }}
+  {{ end }}
+  {{ range $i, $author := $authors }}
+    {{ $n := add $i 1 }}
+    {{ if not (reflect.IsMap $author) }}
+      {{ errorf "lesson/authors: CITATION.cff author %d must be a mapping of keys to values, got %v" $n $author }}
+      {{ continue }}
+    {{ end }}
+    {{/* Person authors: given-names name-particle family-names name-suffix,
+         e.g. "Alexander von Humboldt III". */}}
+    {{ $parts := slice }}
+    {{ range slice "given-names" "name-particle" "family-names" "name-suffix" }}
+      {{ with trim (printf "%v" (index $author . | default "")) " \t" }}
+        {{ $parts = $parts | append . }}
+      {{ end }}
+    {{ end }}
+    {{ $display := delimit $parts " " }}
+    {{/* Organisations and groups carry a single name field. */}}
+    {{ if not $display }}
+      {{ $display = trim (printf "%v" (index $author "name" | default "")) " \t" }}
+    {{ end }}
+    {{ $orcid := "" }}
+    {{ with findRESubmatch `(\d{4}-\d{4}-\d{4}-\d{3}[\dXx])` (printf "%v" (index $author "orcid" | default "")) 1 }}
+      {{ $orcid = index (index . 0) 0 }}
+    {{ end }}
+    {{ $github := "" }}
+    {{ $alias := trim (printf "%v" (index $author "alias" | default "")) " \t" }}
+    {{ with findRESubmatch `^(?:https?://(?:www\.)?github\.com/)?@?([A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?)/?$` $alias 1 }}
+      {{ $github = index (index . 0) 1 }}
+    {{ end }}
+    {{/* Authors identified only by an alias are listed under that alias. */}}
+    {{ if not $display }}
+      {{ $display = $github | default $alias }}
+    {{ end }}
+    {{ if not $display }}
+      {{ errorf "lesson/authors: CITATION.cff author %d has no name: set given-names/family-names, name, or alias" $n }}
+      {{ continue }}
+    {{ end }}
+    {{ if $orcid }}{{ $hasOrcid = true }}{{ end }}
+    {{ if $github }}{{ $hasGithub = true }}{{ end }}
+    {{ $rows = $rows | append (dict "display" $display "orcid" $orcid "github" $github) }}
   {{ end }}
 {{ end }}
 
