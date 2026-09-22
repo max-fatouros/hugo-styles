@@ -171,6 +171,11 @@ class AuthorsRenderingTests(unittest.TestCase):
             "unparseable": ("authors: [\n", "could not be parsed"),
             "top-level list": ("- given-names: Ada\n", "must be a mapping"),
             "top-level scalar": ("just a string\n", "must be a mapping"),
+            "empty mapping": ("{}\n", "must have an authors list"),
+            "empty list": ("[]\n", "must be a mapping"),
+            "false": ("false\n", "must be a mapping"),
+            "zero": ("0\n", "must be a mapping"),
+            "empty string": ('""\n', "must be a mapping"),
         }
         for label, (citation, message) in cases.items():
             with self.subTest(label):

@@ -21,17 +21,19 @@
      have the structure the table relies on, or the build fails. Full CFF schema
      compliance is left to a validator such as cffconvert. */}}
 {{ if $hasCitation }}
+  {{ $citation := os.ReadFile "CITATION.cff" }}
   {{/* Parse as YAML explicitly: format sniffing fails on comment-only files. */}}
-  {{ $parsed := try (resources.FromString "CITATION.cff.yaml" (os.ReadFile "CITATION.cff") | transform.Unmarshal) }}
+  {{ $parsed := try (resources.FromString "CITATION.cff.yaml" $citation | transform.Unmarshal) }}
   {{ $authors := slice }}
   {{ with $parsed.Err }}
     {{ errorf "lesson/authors: CITATION.cff could not be parsed: %s" . }}
   {{ else }}
-    {{ with $parsed.Value }}
-      {{ if not (reflect.IsMap .) }}
+    {{/* Skip empty source and nil YAML, but validate false, zero, and empty collections. */}}
+    {{ if and $citation (ne $parsed.Value nil) }}
+      {{ if not (reflect.IsMap $parsed.Value) }}
         {{ errorf "lesson/authors: CITATION.cff must be a mapping of keys to values" }}
       {{ else }}
-        {{ $list := index . "authors" }}
+        {{ $list := index $parsed.Value "authors" }}
         {{ if not (reflect.IsSlice $list) }}
           {{ errorf "lesson/authors: CITATION.cff must have an authors list" }}
         {{ else if eq (len $list) 0 }}
